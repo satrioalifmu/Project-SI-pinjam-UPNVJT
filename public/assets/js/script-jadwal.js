@@ -1,151 +1,169 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     const calendarDays = document.getElementById("calendarDays");
     const monthYearText = document.getElementById("calendarMonthYear");
-    const prevBtn = document.getElementById("prevMonth");
-    const nextBtn = document.getElementById("nextMonth");
+    const prevMonthBtn = document.getElementById("prevMonth");
+    const nextMonthBtn = document.getElementById("nextMonth");
     const facilityCards = document.querySelectorAll(".facility-card");
-  
-    let date = new Date();
-    let currentMonth = date.getMonth();
-    let currentYear = date.getFullYear();
-    
-    // Inisialisasi awal: Ambil ID dari fasilitas paling atas
-    let currentFacilityId = null;
-    if (facilityCards.length > 0) {
-        currentFacilityId = facilityCards[0].getAttribute("data-id");
-        // Pastikan fasilitas pertama berwarna biru saat awal dimuat
-        facilityCards[0].classList.add("border-sipblue", "bg-sipblue/5", "active");
-    }
-  
-    const monthNames = [
-      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-      "Juli", "Agustus", "September", "Oktober", "November", "Desember",
-    ];
-  
-    function fetchAndRenderCalendar() {
-      if (!currentFacilityId) return;
-
-      const targetBulan = currentMonth + 1;
-      const cacheBuster = new Date().getTime(); 
-      const apiUrl = `proses/api_jadwal.php?id_fasilitas=${currentFacilityId}&bulan=${targetBulan}&tahun=${currentYear}&_t=${cacheBuster}`;
-  
-      fetch(apiUrl)
-        .then((response) => response.json())
-        .then((data) => {
-          let bookedDates = [];
-          if (Array.isArray(data)) {
-              bookedDates = data.map(Number); 
-          }
-          renderCalendar(bookedDates);
-        })
-        .catch((error) => {
-            console.error("Gagal mengambil data jadwal:", error);
-            renderCalendar([]); 
-        });
-    }
-  
-    function renderCalendar(bookedDates) {
-      calendarDays.innerHTML = "";
-      monthYearText.innerText = `${monthNames[currentMonth]} ${currentYear}`;
-  
-      let firstDay = new Date(currentYear, currentMonth, 1).getDay();
-      firstDay = firstDay === 0 ? 6 : firstDay - 1;
-  
-      let daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  
-      for (let i = 0; i < firstDay; i++) {
-        const emptyDiv = document.createElement("div");
-        emptyDiv.classList.add("empty");
-        calendarDays.appendChild(emptyDiv);
-      }
-  
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dayDiv = document.createElement("div");
-        dayDiv.innerText = day;
-        
-        const currentDayNum = parseInt(day, 10);
-
-        if (bookedDates.includes(currentDayNum)) {
-          dayDiv.classList.add("booked");
-          dayDiv.title = "Fasilitas Penuh / Diblokir";
-        } else {
-          dayDiv.classList.add("available"); 
-        }
-  
-        dayDiv.addEventListener('click', function() {
-            if (this.classList.contains('booked')) {
-                alert("Maaf, fasilitas pada tanggal ini sudah penuh/diblokir oleh Admin.");
-            }
-        });
-  
-        calendarDays.appendChild(dayDiv);
-      }
-    }
-  
-    fetchAndRenderCalendar();
-  
-    prevBtn.addEventListener("click", () => {
-      currentMonth--;
-      if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-      fetchAndRenderCalendar(); 
-    });
-  
-    nextBtn.addEventListener("click", () => {
-      currentMonth++;
-      if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-      fetchAndRenderCalendar(); 
-    });
-  
-    // --- PERBAIKAN LOGIKA KLIK KARTU FASILITAS ---
-    facilityCards.forEach((card) => {
-      card.addEventListener("click", function () {
-        
-        // 1. Hapus SEMUA indikator aktif dari SEMUA kartu
-        facilityCards.forEach((c) => {
-            c.classList.remove("border-sipblue", "bg-sipblue/5", "active");
-        });
-        
-        // 2. Beri indikator aktif HANYA pada kartu yang baru saja diklik
-        this.classList.add("border-sipblue", "bg-sipblue/5", "active");
-  
-        // 3. Ganti ID fasilitas dan muat ulang kalender
-        currentFacilityId = this.getAttribute("data-id");
-        fetchAndRenderCalendar();
-      });
-    });
-  
-    // --- PENCARIAN FASILITAS ---
     const searchInput = document.getElementById("searchFacility");
     const kategoriSelect = document.getElementById("kategori");
-    const btnSearch = document.querySelector(".btn-search-airbnb");
-  
-    function filterFasilitas() {
-      const keyword = searchInput.value.toLowerCase();
-      const kategori = kategoriSelect.value.toLowerCase();
-      let fasilitasPertama = null;
-  
-      facilityCards.forEach((card) => {
-        const namaFasilitas = card.getAttribute("data-nama");
-        const kategoriFasilitas = card.getAttribute("data-kategori");
-        const cocokNama = namaFasilitas.includes(keyword);
-        const cocokKategori = kategori === "semua" || kategoriFasilitas === kategori;
-  
-        if (cocokNama && cocokKategori) {
-          card.style.display = "flex"; 
-          if (!fasilitasPertama) fasilitasPertama = card;
-        } else {
-          card.style.display = "none"; 
+
+    let currentDate = new Date();
+    let selectedFacilityId = null; 
+
+    // TANGKAP DATA DENGAN AMAN
+    const metaTag = document.getElementById('jadwal-data');
+    let bookedDates = {};
+    
+    try {
+        if (metaTag) {
+            const rawData = metaTag.getAttribute('data-booking');
+            bookedDates = rawData ? JSON.parse(rawData) : {};
+            
+            // TAMBAHKAN BARIS INI UNTUK DEBUGGING
+            console.log("Data Booking dari Server:", bookedDates);
         }
-      });
-  
-      if (fasilitasPertama && !fasilitasPertama.classList.contains("border-sipblue")) {
-        fasilitasPertama.click();
-      }
+    } catch (error) {
+        console.error("Gagal membaca data jadwal dari Laravel:", error);
+        bookedDates = {}; // Fallback aman jika terjadi error
     }
-  
-    searchInput.addEventListener("keyup", filterFasilitas);
-    kategoriSelect.addEventListener("change", filterFasilitas);
-    if (btnSearch) {
-      btnSearch.addEventListener("click", (e) => { e.preventDefault(); filterFasilitas(); });
+
+    // 2. INISIALISASI AWAL: Otomatis pilih fasilitas paling atas saat halaman dimuat
+    if (facilityCards.length > 0) {
+        selectedFacilityId = facilityCards[0].getAttribute("data-id");
+        facilityCards[0].classList.remove("border-sipborder", "bg-sipbg");
+        facilityCards[0].classList.add("border-sipblue", "bg-sipblue/5");
     }
+
+    // 3. FUNGSI MENGGAMBAR KALENDER
+    function renderCalendar(date) {
+        calendarDays.innerHTML = "";
+        
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
+        monthYearText.textContent = `${monthNames[month]} ${year}`;
+
+        let firstDay = new Date(year, month, 1).getDay();
+        firstDay = firstDay === 0 ? 6 : firstDay - 1; // Senin = 0
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const today = new Date();
+        
+        // Ambil daftar tanggal merah khusus untuk fasilitas yang sedang dipilih
+        const currentFacilityBookings = selectedFacilityId ? (bookedDates[selectedFacilityId] || []) : [];
+
+        // Buat kotak kosong untuk hari sebelum tanggal 1
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDiv = document.createElement("div");
+            emptyDiv.className = "h-12 md:h-16 rounded-xl bg-transparent border border-transparent";
+            calendarDays.appendChild(emptyDiv);
+        }
+
+        // Buat kotak tanggal
+        for (let i = 1; i <= daysInMonth; i++) {
+            const dayDiv = document.createElement("div");
+            dayDiv.className = "h-12 md:h-16 rounded-xl flex flex-col items-center justify-center text-sm font-semibold transition-all border relative cursor-pointer";
+
+            // Format tanggal (YYYY-MM-DD) agar cocok dengan database Laravel
+            const currentCellDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+            const isPast = new Date(year, month, i) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            
+            let statusHTML = "";
+
+            if (isPast) {
+                // TANGGAL SUDAH LEWAT
+                dayDiv.classList.add("bg-sipbg/50", "text-gray-600", "border-transparent", "cursor-not-allowed");
+            } else {
+                // CEK APAKAH TANGGAL INI ADA DI DATABASE
+                if (currentFacilityBookings.includes(currentCellDate)) {
+                    // PENUH / BOOKED (MERAH)
+                    dayDiv.classList.add("bg-sipred/10", "text-white", "border-sipred/50");
+                    statusHTML = `<span class="w-1.5 h-1.5 rounded-full bg-sipred absolute bottom-2 shadow-[0_0_5px_#DE2828]"></span>`;
+                    dayDiv.title = "Fasilitas Penuh / Diblokir";
+                    
+                    // Alert seperti di script lama Anda
+                    dayDiv.addEventListener('click', () => {
+                        alert("Maaf, fasilitas pada tanggal ini sudah penuh/diblokir oleh Admin.");
+                    });
+                } else {
+                    // TERSEDIA (HIJAU)
+                    dayDiv.classList.add("bg-[#00AE1C]/10", "text-white", "border-[#00AE1C]/50");
+                    statusHTML = `<span class="w-1.5 h-1.5 rounded-full bg-[#00AE1C] absolute bottom-2 shadow-[0_0_5px_#00AE1C]"></span>`;
+                    dayDiv.title = "Tersedia untuk dipinjam";
+                }
+            }
+
+            // Highlight biru khusus hari ini
+            if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+                dayDiv.classList.add("ring-2", "ring-sipblue");
+            }
+
+            dayDiv.innerHTML = `<span>${i}</span> ${statusHTML}`;
+            calendarDays.appendChild(dayDiv);
+        }
+    }
+
+    // 4. NAVIGASI BULAN
+    prevMonthBtn.addEventListener("click", () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar(currentDate);
+    });
+
+    nextMonthBtn.addEventListener("click", () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar(currentDate);
+    });
+
+    // 5. EFEK KLIK PADA KARTU FASILITAS
+    facilityCards.forEach(card => {
+        card.addEventListener("click", function() {
+            // Hapus efek aktif dari semua kartu
+            facilityCards.forEach(c => {
+                c.classList.remove("border-sipblue", "bg-sipblue/5");
+                c.classList.add("border-sipborder", "bg-sipbg");
+            });
+
+            // Berikan efek aktif ke kartu yang diklik
+            this.classList.remove("border-sipborder", "bg-sipbg");
+            this.classList.add("border-sipblue", "bg-sipblue/5");
+
+            // SIMPAN ID DAN PERBARUI KALENDER SECARA INSTAN!
+            selectedFacilityId = this.getAttribute("data-id");
+            renderCalendar(currentDate);
+        });
+    });
+
+    // 6. FITUR PENCARIAN & FILTER KATEGORI
+    function filterFacilities() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const categoryTerm = kategoriSelect.value.toLowerCase();
+        let firstVisibleCard = null; // Menyimpan kartu pertama yang muncul
+
+        facilityCards.forEach(card => {
+            const name = card.getAttribute("data-nama");
+            const category = card.getAttribute("data-kategori");
+            
+            const matchName = name.includes(searchTerm);
+            const matchCategory = categoryTerm === "semua" || category === categoryTerm;
+
+            if (matchName && matchCategory) {
+                card.style.display = "flex";
+                if (!firstVisibleCard) firstVisibleCard = card;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        // Fitur canggih: Otomatis klik kartu teratas hasil pencarian
+        if (firstVisibleCard && !firstVisibleCard.classList.contains("border-sipblue")) {
+            firstVisibleCard.click();
+        }
+    }
+
+    searchInput.addEventListener("keyup", filterFacilities);
+    kategoriSelect.addEventListener("change", filterFacilities);
+
+    // 7. JALANKAN KALENDER PERTAMA KALI SAAT HALAMAN DIBUKA
+    renderCalendar(currentDate);
 });

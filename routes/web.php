@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DosenController;
 use App\Http\Controllers\MahasiswaController;
+use App\Http\Controllers\JadwalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,9 +17,8 @@ use App\Http\Controllers\MahasiswaController;
 */
 
 // --- 1. JALUR UMUM (BISA DIAKSES SIAPA SAJA) ---
-Route::get('/', function () { 
-    return view('welcome'); 
-})->name('home');
+Route::get('/', [App\Http\Controllers\FasilitasController::class, 'index'])->name('home');
+Route::get('/jadwal-fasilitas', [JadwalController::class, 'index'])->name('jadwal.index');
 
 Route::get('/fasilitas', [FasilitasController::class, 'index'])->name('fasilitas.index');
 Route::get('/fasilitas/{id}', [FasilitasController::class, 'show'])->name('fasilitas.detail');

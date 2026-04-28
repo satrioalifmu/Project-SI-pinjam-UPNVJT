@@ -100,3 +100,111 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+// ==========================================
+// SWEETALERT KONFIRMASI UNTUK SEMUA PROSES
+// ==========================================
+
+// 1. Konfirmasi Buka Blokir
+function konfirmasiBukaBlokir(button) {
+    Swal.fire({
+        title: 'Buka Blokir Jadwal?',
+        text: "Fasilitas ini akan kembali tersedia untuk dipinjam pada tanggal tersebut.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#009EF7',
+        confirmButtonText: '<i class="fas fa-lock-open mr-1"></i> Ya, Buka!',
+        cancelButtonText: 'Batal',
+        background: '#16181e',
+        color: '#fff',
+        customClass: {
+            confirmButton: 'rounded-xl font-bold px-6 py-2.5',
+            cancelButton: 'rounded-xl font-bold px-6 py-2.5',
+            popup: 'rounded-3xl border border-gray-700'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) button.closest('form').submit();
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // 2. Konfirmasi Tambah Fasilitas
+    const formTambah = document.getElementById('formTambahFasilitas');
+    if (formTambah) {
+        formTambah.addEventListener('submit', function(e) {
+            e.preventDefault(); // Tahan pengiriman form
+            Swal.fire({
+                title: 'Simpan Fasilitas Baru?',
+                text: "Pastikan nama dan kapasitas sudah benar.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#009EF7',
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Periksa Lagi',
+                background: '#16181e',
+                color: '#fff',
+                customClass: { confirmButton: 'rounded-xl', cancelButton: 'rounded-xl', popup: 'rounded-3xl border border-gray-700' }
+            }).then((result) => {
+                if (result.isConfirmed) this.submit();
+            });
+        });
+    }
+
+    // 3. Konfirmasi Blokir Jadwal
+    const formBlokir = document.getElementById('formBlokirJadwal');
+    if (formBlokir) {
+        formBlokir.addEventListener('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Blokir Rentang Tanggal Ini?',
+                text: "Pengguna tidak akan bisa meminjam fasilitas ini di tanggal yang dipilih.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#DE2828', // Warna merah
+                confirmButtonText: '<i class="fas fa-ban mr-1"></i> Ya, Blokir',
+                cancelButtonText: 'Batal',
+                background: '#16181e',
+                color: '#fff',
+                customClass: { confirmButton: 'rounded-xl', cancelButton: 'rounded-xl', popup: 'rounded-3xl border border-gray-700' }
+            }).then((result) => {
+                if (result.isConfirmed) this.submit();
+            });
+        });
+    }
+
+    // ==========================================
+    // LOGIKA PENCARIAN & FILTER TABEL BLOKIR
+    // ==========================================
+    const searchBlokir = document.getElementById('searchBlokir');
+    const filterKategoriBlokir = document.getElementById('filterKategoriBlokir');
+    const blokirRows = document.querySelectorAll('.blokir-row');
+
+    function jalankanFilterBlokir() {
+        if (!searchBlokir) return;
+        
+        const keyword = searchBlokir.value.toLowerCase();
+        const kategori = filterKategoriBlokir.value.toLowerCase();
+
+        blokirRows.forEach(row => {
+            const nama = row.getAttribute('data-nama');
+            const alasan = row.getAttribute('data-alasan');
+            const kat = row.getAttribute('data-kategori');
+
+            // Cek kecocokan teks dan kategori
+            const textMatch = nama.includes(keyword) || alasan.includes(keyword);
+            const catMatch = kategori === 'semua' || kat === kategori;
+
+            if (textMatch && catMatch) {
+                row.style.display = ''; // Tampilkan
+            } else {
+                row.style.display = 'none'; // Sembunyikan
+            }
+        });
+    }
+
+    if (searchBlokir && filterKategoriBlokir) {
+        searchBlokir.addEventListener('keyup', jalankanFilterBlokir);
+        filterKategoriBlokir.addEventListener('change', jalankanFilterBlokir);
+    }
+});

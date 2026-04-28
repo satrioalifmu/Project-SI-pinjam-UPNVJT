@@ -7,12 +7,14 @@ use Illuminate\Http\Request;
 
 class FasilitasController extends Controller
 {
+    
 public function index()
-    {
-        // Hanya mengambil fasilitas yang statusnya 'tersedia'
-        $data_fasilitas = \App\Models\Fasilitas::where('status', 'tersedia')->get();
 
-        return view('jadwal_fasilitas', compact('data_fasilitas'));
+    {
+        // Mengambil semua data fasilitas dari database
+        $q_fasilitas = Fasilitas::all();
+        
+        return view('welcome', compact('q_fasilitas'));
     }
 
     // --- TAMBAHKAN FUNGSI INI DI BAWAH FUNGSI index() ---
@@ -38,9 +40,12 @@ public function index()
         ];
 
         // Cek gambar, jika tidak ada pakai gambar default
-        $gambar_tampil = isset($kumpulan_gambar[$id]) ? $kumpulan_gambar[$id] : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1200";
+        $fasilitas = Fasilitas::findOrFail($id);
 
-        // 4. Kirim data dan gambar ke tampilan Blade
-        return view('detail_fasilitas', compact('data', 'gambar_tampil'));
+        return view('detail_fasilitas', compact('fasilitas'));
+
     }
+
+    
+    
 }

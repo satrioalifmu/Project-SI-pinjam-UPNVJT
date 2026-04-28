@@ -113,4 +113,20 @@ class AdminController extends Controller
         Peminjaman::destroy($request->id_buka_blokir);
         return back()->with('success', 'Blokir dibuka!');
     }
+
+    public function unblockJadwal(Request $request)
+{
+    $id = $request->id_peminjaman;
+    
+    $data = Peminjaman::where('id_peminjaman', $id)
+                      ->where('status', 'diblokir')
+                      ->first();
+
+    if($data) {
+        $data->delete();
+        return back()->with('success', 'Jadwal telah dibuka kembali.');
+    }
+
+    return back()->with('error', 'Data tidak ditemukan.');
+}
 }

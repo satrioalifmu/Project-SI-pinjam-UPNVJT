@@ -7,6 +7,7 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/images/Logo-SI-Pinjam.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     
     @vite('resources/css/app.css')
 </head>
@@ -68,7 +69,7 @@
                 <a href="#perbandingan" class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-sipblue text-white font-semibold hover:bg-sipbluehover transition shadow-lg shadow-sipblue/30">
                     Lihat Perbandingan Akses
                 </a>
-                <a href="{{ url('fasilitas') }}" class="w-full sm:w-auto px-8 py-3.5 rounded-full border border-siptext text-siptext font-semibold hover:text-white hover:border-white transition bg-transparent">
+                <a href="{{ url('jadwal-fasilitas') }}" class="w-full sm:w-auto px-8 py-3.5 rounded-full border border-siptext text-siptext font-semibold hover:text-white hover:border-white transition bg-transparent">
                     Lihat Jadwal Fasilitas
                 </a>
             </div>
@@ -200,55 +201,144 @@
     </section>
 
     <section id="showcase" class="py-24 relative z-10 bg-sipbg overflow-hidden">
-        <div class="container mx-auto px-6 md:px-12 lg:px-20 max-w-[1600px]">
-            
-            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                <div class="max-w-2xl">
-                    <h2 class="text-sipblue font-bold tracking-widest uppercase text-sm mb-3">Galeri UPNVJT</h2>
-                    <h3 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Fasilitas Kampus <span class="text-transparent bg-clip-text bg-gradient-to-r from-sipblue to-blue-400">Unggulan</span></h3>
-                    <p class="text-siptext text-base leading-relaxed">
-                        Eksplorasi berbagai ruang representatif yang siap mendukung setiap agenda akademik, organisasi, maupun kegiatan kolaboratif Anda.
-                    </p>
-                </div>
+    <div class="container mx-auto px-6 md:px-12 lg:px-20 max-w-[1600px]">
+        
+        <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div class="max-w-2xl">
+                <h2 class="text-sipblue font-bold tracking-widest uppercase text-sm mb-3">Galeri UPNVJT</h2>
+                <h3 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Fasilitas Kampus <span class="text-transparent bg-clip-text bg-gradient-to-r from-sipblue to-blue-400">Unggulan</span></h3>
+                <p class="text-siptext text-base leading-relaxed">
+                    Eksplorasi berbagai ruang representatif yang siap mendukung setiap agenda akademik, organisasi, maupun kegiatan kolaboratif Anda.
+                </p>
             </div>
         </div>
+    </div>
 
-        <div id="carouselFasilitas" class="flex overflow-x-auto snap-x snap-mandatory gap-6 px-6 md:px-12 lg:px-20 pb-12 pt-4 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-sipdark [&::-webkit-scrollbar-thumb]:bg-sipborder [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-siptext transition-all">
+    <div id="carouselFasilitas" class="flex overflow-x-auto snap-x snap-mandatory gap-6 px-6 md:px-12 lg:px-20 pb-12 pt-4 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-sipdark [&::-webkit-scrollbar-thumb]:bg-sipborder [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-siptext transition-all">
+        
+        @forelse($q_fasilitas as $fasilitas)
+            @php
+                // Cek ketersediaan foto dari database
+                $gambar_tampil = $fasilitas->foto_fasilitas 
+                                ? asset('assets/images/fasilitas/' . $fasilitas->foto_fasilitas) 
+                                : 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop';
+            @endphp
             
-            <a href="{{ url('fasilitas/1') }}" class="snap-start shrink-0 w-[85vw] md:w-[600px] h-[400px] relative rounded-3xl overflow-hidden group cursor-pointer shadow-2xl border border-sipborder/50 hover:border-sipblue transition-all duration-500">
-                <img src="https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=1000&auto=format&fit=crop" alt="Gedung Serba Guna" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+            <a href="{{ route('fasilitas.detail', $fasilitas->id_fasilitas) }}" class="snap-start shrink-0 w-[85vw] md:w-[600px] h-[400px] relative rounded-3xl overflow-hidden group cursor-pointer shadow-2xl border border-sipborder/50 hover:border-sipblue transition-all duration-500">
+                <img src="{{ $gambar_tampil }}" alt="{{ $fasilitas->nama_fasilitas }}" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
                 <div class="absolute inset-0 bg-gradient-to-t from-[#0f1115] via-[#0f1115]/50 to-transparent opacity-90"></div>
                 
                 <div class="absolute bottom-0 left-0 w-full p-8 translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                     <div class="flex items-center gap-3 mb-3">
-                        <span class="px-3 py-1 text-xs font-bold bg-sipblue text-white rounded-full shadow-lg shadow-sipblue/30"><i class="fas fa-users mr-1"></i> 1000</span>
-                        <span class="px-3 py-1 text-xs font-bold bg-white/10 backdrop-blur-md text-white rounded-full border border-white/20">GSG</span>
+                        <span class="px-3 py-1 text-xs font-bold bg-sipblue text-white rounded-full shadow-lg shadow-sipblue/30">
+                            <i class="fas fa-users mr-1"></i> {{ $fasilitas->kapasitas }}
+                        </span>
+                        <span class="px-3 py-1 text-xs font-bold bg-white/10 backdrop-blur-md text-white rounded-full border border-white/20 uppercase">
+                            {{ $fasilitas->kategori }}
+                        </span>
                     </div>
-                    <h4 class="text-2xl font-bold text-white mb-2">Gedung Serba Guna (GSG)</h4>
+                    <h4 class="text-2xl font-bold text-white mb-2">{{ $fasilitas->nama_fasilitas }}</h4>
                     <p class="text-sm text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 line-clamp-2">
-                        Pusat kegiatan utama kampus dengan kapasitas masif, cocok untuk seminar nasional, yudisium, maupun pementasan besar.
+                        Fasilitas ruangan representatif kategori {{ strtoupper($fasilitas->kategori) }} yang dapat menampung hingga {{ $fasilitas->kapasitas }} pengguna.
                     </p>
                 </div>
             </a>
+        @empty
+            <div class="w-full text-center py-16 bg-sipdark/50 border border-sipborder border-dashed rounded-3xl mx-auto">
+                <i class="fas fa-image text-4xl text-siptext mb-3"></i>
+                <p class="text-siptext font-medium">Belum ada fasilitas kampus yang diunggah.</p>
+            </div>
+        @endforelse
 
+        @if(count($q_fasilitas) > 0)
             <div class="snap-start shrink-0 w-6 md:w-12"></div>
-        </div>
-        
-        <div class="container mx-auto px-6 md:px-12 lg:px-20 max-w-[1600px] mt-8 text-center md:text-left">
-            <a href="{{ url('fasilitas') }}" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-sipdark border border-sipborder text-white text-sm font-semibold hover:bg-sipblue hover:border-sipblue hover:shadow-lg hover:shadow-sipblue/30 transition-all">
-                Cek Ketersediaan Selengkapnya <i class="fas fa-arrow-right"></i>
-            </a>
-        </div>
-    </section>
+        @endif
+    </div>
+    
+    <div class="container mx-auto px-6 md:px-12 lg:px-20 max-w-[1600px] mt-8 text-center md:text-left">
+        <a href="{{ route('fasilitas.index') }}" class="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-sipdark border border-sipborder text-white text-sm font-semibold hover:bg-sipblue hover:border-sipblue hover:shadow-lg hover:shadow-sipblue/30 transition-all">
+            Cek Ketersediaan Selengkapnya <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+</section>
 
-    <section id="faq" class="py-24 relative z-10 bg-sipbg border-t border-sipborder/30">
-        <div class="container mx-auto px-6 md:px-12 lg:px-20 max-w-[1000px]">
-            <div class="text-center mb-16">
-                <h2 class="text-sipblue font-bold tracking-widest uppercase text-sm mb-3">Bantuan & Informasi</h2>
-                <h3 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Pertanyaan yang Sering <span class="text-transparent bg-clip-text bg-gradient-to-r from-sipblue to-blue-400">Diajukan</span></h3>
-            </div>
-            </div>
-    </section>
+    <section id="faq" class="py-24 bg-sipbg">
+    <div class="container mx-auto px-6 md:px-12 lg:px-20 max-w-4xl">
+        
+        <div class="text-center mb-16">
+            <h2 class="text-sipblue font-bold tracking-widest uppercase text-sm mb-3">Bantuan & Informasi</h2>
+            <h3 class="text-3xl md:text-4xl font-extrabold text-white mb-4">Pertanyaan yang Sering <span class="text-transparent bg-clip-text bg-gradient-to-r from-sipblue to-blue-400">Diajukan</span></h3>
+            <p class="text-siptext text-base">Temukan jawaban cepat untuk pertanyaan seputar penggunaan sistem peminjaman fasilitas kampus.</p>
+        </div>
+
+        <div class="space-y-4">
+            
+            <details class="group bg-sipdark border border-sipborder rounded-2xl [&_summary::-webkit-details-marker]:hidden">
+                <summary class="flex items-center justify-between p-6 cursor-pointer font-bold text-white hover:text-sipblue transition-colors">
+                    <span>Siapa saja yang dapat meminjam fasilitas melalui SI-PINJAM?</span>
+                    <span class="transition group-open:rotate-180">
+                        <i class="fas fa-chevron-down text-siptext"></i>
+                    </span>
+                </summary>
+                <div class="px-6 pb-6 text-siptext text-sm leading-relaxed border-t border-sipborder/50 pt-4 mt-2">
+                    Seluruh civitas akademika UPN "Veteran" Jawa Timur, baik Mahasiswa, Dosen, maupun Tenaga Kependidikan yang telah memiliki akun terdaftar di sistem.
+                </div>
+            </details>
+
+            <details class="group bg-sipdark border border-sipborder rounded-2xl [&_summary::-webkit-details-marker]:hidden">
+                <summary class="flex items-center justify-between p-6 cursor-pointer font-bold text-white hover:text-sipblue transition-colors">
+                    <span>Bagaimana langkah-langkah mengajukan peminjaman ruangan?</span>
+                    <span class="transition group-open:rotate-180">
+                        <i class="fas fa-chevron-down text-siptext"></i>
+                    </span>
+                </summary>
+                <div class="px-6 pb-6 text-siptext text-sm leading-relaxed border-t border-sipborder/50 pt-4 mt-2">
+                    Silakan <strong>Log In</strong> menggunakan akun Anda, masuk ke menu <strong>Daftar Fasilitas</strong>, pilih ruangan yang sesuai dengan kapasitas kegiatan Anda, lalu klik <strong>Pinjam Sekarang</strong>. Isi formulir (tanggal, waktu, dan keperluan) lalu tunggu persetujuan dari Admin.
+                </div>
+            </details>
+
+            <details class="group bg-sipdark border border-sipborder rounded-2xl [&_summary::-webkit-details-marker]:hidden">
+                <summary class="flex items-center justify-between p-6 cursor-pointer font-bold text-white hover:text-sipblue transition-colors">
+                    <span>Apa arti dari status "Pending", "Disetujui", dan "Ditolak"?</span>
+                    <span class="transition group-open:rotate-180">
+                        <i class="fas fa-chevron-down text-siptext"></i>
+                    </span>
+                </summary>
+                <div class="px-6 pb-6 text-siptext text-sm leading-relaxed border-t border-sipborder/50 pt-4 mt-2 space-y-2">
+                    <p><span class="text-yellow-500 font-bold">Pending:</span> Pengajuan Anda sudah masuk dan sedang menunggu ditinjau oleh Admin.</p>
+                    <p><span class="text-[#00AE1C] font-bold">Disetujui:</span> Ruangan telah di-booking untuk Anda dan siap digunakan pada tanggal tersebut.</p>
+                    <p><span class="text-sipred font-bold">Ditolak:</span> Pengajuan tidak dapat diproses, biasanya karena ruangan sudah dipesan pihak lain atau sedang dalam perbaikan.</p>
+                </div>
+            </details>
+
+            <details class="group bg-sipdark border border-sipborder rounded-2xl [&_summary::-webkit-details-marker]:hidden">
+                <summary class="flex items-center justify-between p-6 cursor-pointer font-bold text-white hover:text-sipblue transition-colors">
+                    <span>Apakah saya bisa membatalkan pengajuan yang sudah disetujui?</span>
+                    <span class="transition group-open:rotate-180">
+                        <i class="fas fa-chevron-down text-siptext"></i>
+                    </span>
+                </summary>
+                <div class="px-6 pb-6 text-siptext text-sm leading-relaxed border-t border-sipborder/50 pt-4 mt-2">
+                    Bisa. Pembatalan dapat dilakukan langsung melalui <em>Dashboard</em> pengguna Anda, selambat-lambatnya H-1 sebelum tanggal pemakaian. Jika pada hari H, harap hubungi langsung pihak Admin pengelola gedung.
+                </div>
+            </details>
+
+            <details class="group bg-sipdark border border-sipborder rounded-2xl [&_summary::-webkit-details-marker]:hidden">
+                <summary class="flex items-center justify-between p-6 cursor-pointer font-bold text-white hover:text-sipblue transition-colors">
+                    <span>Kenapa ada tanggal yang berwarna merah atau bertanda "Diblokir"?</span>
+                    <span class="transition group-open:rotate-180">
+                        <i class="fas fa-chevron-down text-siptext"></i>
+                    </span>
+                </summary>
+                <div class="px-6 pb-6 text-siptext text-sm leading-relaxed border-t border-sipborder/50 pt-4 mt-2">
+                    Tanggal yang diblokir menandakan bahwa fasilitas tersebut sedang ditutup oleh pihak kampus (misalnya: perawatan berkala, libur nasional, atau digunakan untuk acara internal universitas).
+                </div>
+            </details>
+
+        </div>
+
+    </div>
+</section>
 
     <script src="{{ asset('assets/js/script-landing.js') }}"></script>
 </body>

@@ -152,6 +152,8 @@
         </div>
     </div>
 
+   <meta id="jadwal-data" data-booking='{!! json_encode($jadwal_booking ?? (object)[]) !!}'>
+
     <script src="{{ asset('assets/js/script-jadwal.js') }}"></script>
 </body>
 </html>
