@@ -10,6 +10,7 @@ use App\Http\Controllers\DosenController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\JadwalController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes - SI-PINJAM UPNVJT
@@ -40,6 +41,8 @@ Route::middleware(['auth'])->group(function () {
     // --- AREA ADMIN ---
     // Dashboard Utama (Statistik)
     Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+    // Rute untuk memproses pengajuan pinjaman dari Mahasiswa
+    Route::post('/mahasiswa/ajukan-pinjam', [App\Http\Controllers\MahasiswaController::class, 'storePeminjaman'])->name('mahasiswa.pinjam.store');
     
     // Kelola Fasilitas (Halaman CRUD)
     Route::get('/admin/fasilitas', [AdminController::class, 'fasilitas'])->name('admin.fasilitas');
@@ -59,5 +62,9 @@ Route::middleware(['auth'])->group(function () {
 
     // --- AREA MAHASISWA ---
     Route::get('/dashboard/mahasiswa', [MahasiswaController::class, 'index'])->name('mahasiswa.dashboard');
+    // 1. Rute untuk membuka halaman Form Pengajuan (Ini yang memicu error tadi)
+    Route::get('/mahasiswa/form-pinjam', [MahasiswaController::class, 'formPinjam'])->name('mahasiswa.pinjam.form');
+    // 2. Rute untuk memproses data saat tombol "Ajukan Peminjaman" ditekan
+    Route::post('/mahasiswa/ajukan-pinjam', [MahasiswaController::class, 'storePeminjaman'])->name('mahasiswa.pinjam.store');
 
 });
