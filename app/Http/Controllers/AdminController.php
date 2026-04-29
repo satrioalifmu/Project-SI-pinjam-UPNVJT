@@ -6,37 +6,37 @@ use Illuminate\Http\Request;
 use App\Models\Fasilitas;
 use App\Models\Peminjaman;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Auth;
+use Carbon\CarbonPeriod; // Wajib ditambahkan untuk mengelola rentang tanggal
 
 class AdminController extends Controller
 {
-    // --- 1. FUNGSI UTAMA INI YANG HILANG/BELUM ADA ---
+    // --- 1. HALAMAN DASHBOARD ---
     public function index()
     {
-        // Menghitung data statistik untuk Card
         $count_pending = Peminjaman::where('status', 'pending')->count();
         $count_disetujui = Peminjaman::where('status', 'disetujui')->count();
         $count_fasilitas = Fasilitas::count();
 
-        // Mengambil data peminjaman terbaru
         $recent_bookings = Peminjaman::with('fasilitas')
                             ->where('status', '!=', 'diblokir')
                             ->orderBy('id_peminjaman', 'desc')
                             ->take(5)
                             ->get();
 
-        // Pastikan file-nya ada di resources/views/admin/dashboard.blade.php
         return view('admin.dashboard', compact('count_pending', 'count_disetujui', 'count_fasilitas', 'recent_bookings'));
     }
 
-    // 2. Fungsi untuk halaman kelola fasilitas
+    // --- 2. HALAMAN KELOLA FASILITAS ---
     public function fasilitas()
     {
         $q_fasilitas = Fasilitas::orderBy('kategori', 'asc')->get();
+        // Mengambil semua data blokir tanpa dibatasi (jangan pakai limit/take di sini)
         $q_blokir = Peminjaman::with('fasilitas')->where('status', 'diblokir')->get();
         return view('admin.fasilitas', compact('q_fasilitas', 'q_blokir'));
     }
 
-    // --- FUNGSI CRUD LAINNYA ---
+    // --- 3. CRUD FASILITAS ---
     public function storeFasilitas(Request $request)
     {
         $foto_nama = "";
@@ -87,46 +87,80 @@ class AdminController extends Controller
         return back()->with('success', 'Fasilitas dihapus!');
     }
 
+    // --- 4. LOGIKA BLOKIR JADWAL (SUDAH DIPERBAIKI) ---
     public function blockSchedule(Request $request)
     {
-        $begin = new \DateTime($request->tanggal_mulai);
-        $end = new \DateTime($request->tanggal_selesai);
-        $end->modify('+1 day');
-        $interval = new \DateInterval('P1D');
-        $period = new \DatePeriod($begin, $interval, $end);
+        // 1. Validasi input untuk keamanan
+        $request->validate([
+            'id_fasilitas_blokir' => 'required',
+            'tanggal_mulai'       => 'required|date',
+            'tanggal_berakhir'    => 'required|date|after_or_equal:tanggal_mulai', // Disesuaikan dengan form HTML
+            'keperluan'           => 'required|string'
+        ]);
 
-        foreach ($period as $dt) {
-            Peminjaman::firstOrCreate([
-                'id_fasilitas' => $request->id_fasilitas_blokir,
-                'tanggal_pinjam' => $dt->format("Y-m-d")
-            ], [
-                'id_user' => null,
-                'keperluan' => $request->keperluan,
-                'status' => 'diblokir'
-            ]);
+        // 2. Buat rentang tanggal menggunakan fitur bawaan Laravel (Carbon)
+        $period = CarbonPeriod::create($request->tanggal_mulai, $request->tanggal_berakhir);
+        $berhasil = 0;
+        $dilewati = 0;
+
+        foreach ($period as $date) {
+            $tgl = $date->format('Y-m-d');
+
+            // 3. Cek Pintar: Apakah tanggal ini sudah terisi?
+            $sudahAda = Peminjaman::where('id_fasilitas', $request->id_fasilitas_blokir)
+                                  ->where('tanggal_pinjam', $tgl)
+                                  ->whereIn('status', ['diblokir', 'disetujui', 'pending'])
+                                  ->exists();
+
+            if (!$sudahAda) {
+                // Jika masih kosong, blokir!
+                Peminjaman::create([
+                    'id_fasilitas'   => $request->id_fasilitas_blokir,
+                    'id_user' => Auth::id() ?? 1,
+                    'tanggal_pinjam' => $tgl,
+                    'keperluan'      => $request->keperluan,
+                    'status'         => 'diblokir'
+                ]);
+                $berhasil++;
+            } else {
+                // Jika sudah ada jadwal di tanggal ini, catat sebagai 'dilewati'
+                $dilewati++;
+            }
         }
-        return back()->with('success', 'Jadwal diblokir!');
+
+        // 4. Laporan yang informatif untuk Admin
+        if ($berhasil > 0) {
+            $pesan = "$berhasil hari jadwal berhasil diblokir.";
+            if ($dilewati > 0) {
+                $pesan .= " ($dilewati hari dilewati karena sudah ada jadwal/blokir sebelumnya).";
+            }
+            return back()->with('success', $pesan);
+        } else {
+            return back()->with('error', 'Gagal memblokir. Seluruh tanggal di rentang tersebut sudah terisi sebelumnya.');
+        }
     }
 
-    public function unblockSchedule(Request $request)
+    // --- 5. LOGIKA BUKA BLOKIR RENTANG TANGGAL (POP-UP SWEETALERT) ---
+    public function unblockRange(Request $request)
     {
-        Peminjaman::destroy($request->id_buka_blokir);
-        return back()->with('success', 'Blokir dibuka!');
-    }
+        $request->validate([
+            'id_fasilitas_unblock' => 'required',
+            'tanggal_mulai_unblock' => 'required|date',
+            'tanggal_berakhir_unblock' => 'required|date|after_or_equal:tanggal_mulai_unblock',
+        ]);
 
-    public function unblockJadwal(Request $request)
-{
-    $id = $request->id_peminjaman;
+        // Hapus massal data blokir yang berada di dalam rentang tanggal
+        $deleted = Peminjaman::where('id_fasilitas', $request->id_fasilitas_unblock)
+            ->where('status', 'diblokir')
+            ->whereBetween('tanggal_pinjam', [$request->tanggal_mulai_unblock, $request->tanggal_berakhir_unblock])
+            ->delete();
+
+        if($deleted) {
+            return back()->with('success', "$deleted hari jadwal blokir berhasil dibuka pada rentang tersebut.");
+        } else {
+            return back()->with('error', 'Tidak ditemukan jadwal diblokir pada rentang tersebut.');
+        }
+    }
     
-    $data = Peminjaman::where('id_peminjaman', $id)
-                      ->where('status', 'diblokir')
-                      ->first();
-
-    if($data) {
-        $data->delete();
-        return back()->with('success', 'Jadwal telah dibuka kembali.');
-    }
-
-    return back()->with('error', 'Data tidak ditemukan.');
-}
+    // (Opsional) Fungsi buka blokir satu-satu saya hapus karena kita sudah pakai unblockRange yang jauh lebih canggih.
 }

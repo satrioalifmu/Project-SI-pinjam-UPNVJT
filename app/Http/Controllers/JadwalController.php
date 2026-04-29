@@ -23,8 +23,9 @@ class JadwalController extends Controller
             $id = $p->id_fasilitas;
             $tanggal = date('Y-m-d', strtotime($p->tanggal_pinjam));
             
-            // Masukkan tanggal ke dalam "keranjang" ID fasilitas yang sesuai
-            $jadwal_booking[$id][] = $tanggal;
+            // PERUBAHAN: Simpan alasan (keperluan) sebagai "isi" dari tanggalnya
+            // Jika kosong, beri nilai default
+            $jadwal_booking[$id][$tanggal] = $p->keperluan ?? 'Telah dibooking / penuh';
         }
 
         // 4. Lempar datanya ke file jadwal_fasilitas.blade.php

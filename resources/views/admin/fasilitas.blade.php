@@ -220,68 +220,96 @@
                         </div>
 
                         <div class="bg-sipdark border border-sipborder rounded-3xl p-6 md:p-8 shadow-xl">
-                            <h2 class="text-lg font-bold mb-6 flex items-center gap-3"><i class="fas fa-calendar-minus text-siptext text-xl"></i> Jadwal Diblokir Admin</h2>
-                            
-                            <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                                <div class="flex-1 relative">
-                                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-siptext"></i>
-                                    <input type="text" id="searchBlokir" placeholder="Cari fasilitas atau alasan..." class="w-full bg-sipbg border border-sipborder rounded-xl pl-10 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-sipred transition-all">
-                                </div>
-                                <select id="filterKategoriBlokir" class="bg-sipbg border border-sipborder rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-sipred transition-all">
-                                    <option value="semua">Semua Kategori</option>
-                                    <option value="gsg">GSG</option>
-                                    <option value="lab">Lab</option>
-                                    <option value="kelas">Kelas</option>
-                                    <option value="rapat">Ruang Rapat</option>
-                                </select>
-                            </div>
+    <h2 class="text-lg font-bold mb-6 flex items-center gap-3">
+        <i class="fas fa-calendar-minus text-siptext text-xl"></i> Fasilitas Yang Diblokir
+    </h2>
+    
+    <div class="flex flex-col sm:flex-row gap-4 mb-6">
+        <div class="flex-1 relative">
+            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-siptext"></i>
+            <input type="text" id="searchBlokir" placeholder="Cari nama fasilitas..." class="w-full bg-sipbg border border-sipborder rounded-xl pl-10 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-sipblue transition-all">
+        </div>
+        <select id="filterKategoriBlokir" class="bg-sipbg border border-sipborder rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-sipblue transition-all">
+            <option value="semua">Semua Kategori</option>
+            <option value="gsg">GSG</option>
+            <option value="lab">Lab</option>
+            <option value="kelas">Kelas</option>
+            <option value="rapat">Ruang Rapat</option>
+        </select>
+    </div>
 
-                            <div class="flex flex-col sm:flex-row gap-4 mb-6">
-                                </div>
+    <div class="overflow-y-auto overflow-x-auto max-h-[400px] pr-2 [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-sipborder [&::-webkit-scrollbar-thumb]:rounded-full">
+        <table class="w-full text-left border-collapse relative">
+            <thead class="sticky top-0 bg-sipdark z-20">
+                <tr class="text-siptext text-xs uppercase font-bold tracking-wider">
+                    <th class="py-4 px-4 border-b border-sipborder shadow-sm">Fasilitas</th>
+                    <th class="py-4 px-4 border-b border-sipborder shadow-sm">Keterangan Blokir</th>
+                    <th class="py-4 px-4 border-b border-sipborder shadow-sm text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="tableBlokirBody">
+                @php
+                    $grouped_blokir = $q_blokir->groupBy('id_fasilitas');
+                @endphp
+                
+                @forelse($grouped_blokir as $id_fasilitas => $blocks)
+                @php
+                    $first = $blocks->first();
+                    $total_hari = $blocks->count();
+                    
+                    // Ambil daftar alasan yang unik (tidak duplikat)
+                    $reasons = $blocks->pluck('keperluan')->unique();
+                    $display_reason = $reasons->count() > 1 ? $reasons->count() . ' Keperluan Berbeda' : $first->keperluan;
+                    
+                    // Format data JSON yang lebih lengkap: [{tanggal: '...', alasan: '...'}, ...]
+                    $blocked_data = $blocks->map(function($item) {
+                        return [
+                            'tanggal' => $item->tanggal_pinjam,
+                            'alasan'  => $item->keperluan
+                        ];
+                    })->sortBy('tanggal')->values()->toArray();
+                @endphp
+                <tr class="blokir-row border-b border-sipborder/50 hover:bg-sipbg/50 transition-colors" 
+                    data-nama="{{ strtolower($first->fasilitas->nama_fasilitas) }}" 
+                    data-kategori="{{ strtolower($first->fasilitas->kategori) }}">
+                    
+                    <td class="py-4 px-4 text-white flex items-center gap-3 whitespace-nowrap">
+                        <div class="w-10 h-10 rounded-lg bg-sipred/10 text-sipred flex items-center justify-center">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-sm">{{ $first->fasilitas->nama_fasilitas }}</div>
+                            <div class="text-[10px] font-bold text-sipred mt-0.5">{{ $total_hari }} Hari Diblokir</div>
+                        </div>
+                    </td>
+                    <td class="py-4 px-4 text-sm text-siptext italic">"{{ $display_reason }}"</td>
+                    <td class="py-4 px-4 text-right">
+                        <button type="button" 
+                                data-dates="{{ json_encode($blocked_data) }}"
+                                onclick="bukaModalEditRentang('{{ $id_fasilitas }}', '{{ addslashes($first->fasilitas->nama_fasilitas) }}', this)" 
+                                class="inline-flex items-center gap-2 text-sipblue bg-sipblue/10 hover:bg-sipblue hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap">
+                            <i class="fas fa-edit"></i> Atur Jadwal
+                        </button>
+                    </td>
+                </tr>
+                @empty
+                <tr id="emptyBlokirRow">
+                    <td colspan="3" class="py-8 text-center text-siptext text-sm">
+                        <i class="fas fa-check-circle text-2xl mb-2 opacity-50 block text-[#00AE1C]"></i> Tidak ada fasilitas yang sedang diblokir.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
 
-                            <div class="overflow-y-auto overflow-x-auto max-h-[400px] pr-2 [&::-webkit-scrollbar]:w-[4px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-sipborder [&::-webkit-scrollbar-thumb]:rounded-full">
-                                <table class="w-full text-left border-collapse relative">
-                                    <thead class="sticky top-0 bg-sipdark z-10">
-                                        <tr class="text-siptext text-xs uppercase font-bold tracking-wider">
-                                            <th class="py-4 px-4 border-b border-sipborder shadow-sm">Tanggal</th>
-                                            <th class="py-4 px-4 border-b border-sipborder shadow-sm">Fasilitas</th>
-                                            <th class="py-4 px-4 border-b border-sipborder shadow-sm">Alasan</th>
-                                            <th class="py-4 px-4 border-b border-sipborder shadow-sm text-right">Aksi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tableBlokirBody">
-                                        @forelse($q_blokir as $b)
-                                        <tr class="blokir-row border-b border-sipborder/50 hover:bg-sipbg/50 transition-colors" 
-                                            data-nama="{{ strtolower($b->fasilitas->nama_fasilitas) }}" 
-                                            data-kategori="{{ strtolower($b->fasilitas->kategori) }}"
-                                            data-alasan="{{ strtolower($b->keperluan) }}">
-                                            
-                                            <td class="py-4 px-4 text-sm font-bold text-sipred flex items-center gap-2 whitespace-nowrap">
-                                                <i class="far fa-calendar-times"></i> {{ date('d M Y', strtotime($b->tanggal_pinjam)) }}
-                                            </td>
-                                            <td class="py-4 px-4 text-sm text-gray-300 font-medium">{{ $b->fasilitas->nama_fasilitas }}</td>
-                                            <td class="py-4 px-4 text-sm text-siptext">{{ $b->keperluan }}</td>
-                                            <td class="py-4 px-4 text-right">
-                                                <form method="POST" action="{{ route('admin.unblock') }}" class="formUnblock">
-                                                    @csrf
-                                                    <input type="hidden" name="id_buka_blokir" value="{{ $b->id_peminjaman }}">
-                                                    <button type="button" onclick="konfirmasiBukaBlokir(this)" class="inline-flex items-center gap-2 text-sipblue bg-sipblue/10 hover:bg-sipblue hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap">
-                                                        <i class="fas fa-lock-open"></i> Buka Blokir
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr id="emptyBlokirRow">
-                                            <td colspan="4" class="py-8 text-center text-siptext text-sm">
-                                                <i class="fas fa-calendar-check text-2xl mb-2 opacity-50 block"></i> Tidak ada jadwal yang sedang diblokir.
-                                            </td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                            </div>
+<form id="formUnblockRange" method="POST" action="{{ route('admin.unblock.range') }}" class="hidden">
+    @csrf
+    <input type="hidden" name="id_fasilitas_unblock" id="unblock_id_fasilitas">
+    <input type="hidden" name="tanggal_mulai_unblock" id="unblock_tanggal_mulai">
+    <input type="hidden" name="tanggal_berakhir_unblock" id="unblock_tanggal_berakhir">
+</form>
                         </div>
 
                     </div>
@@ -298,4 +326,12 @@
     
     <script src="{{ asset('assets/js/admin_fasilitas.js') }}"></script>
 </body>
+<script>
+    window.fasilitasOptions = `
+        <option value="" disabled selected>-- Pilih Fasilitas --</option>
+        @foreach($q_fasilitas as $f)
+            <option value="{{ $f->id_fasilitas }}">{{ $f->nama_fasilitas }}</option>
+        @endforeach
+    `;
+</script>
 </html>

@@ -69,23 +69,52 @@ document.addEventListener("DOMContentLoaded", () => {
             const currentCellDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
             const isPast = new Date(year, month, i) < new Date(today.getFullYear(), today.getMonth(), today.getDate());
             
+            // Cek status booking
             let statusHTML = "";
-
+            
             if (isPast) {
                 // TANGGAL SUDAH LEWAT
                 dayDiv.classList.add("bg-sipbg/50", "text-gray-600", "border-transparent", "cursor-not-allowed");
             } else {
                 // CEK APAKAH TANGGAL INI ADA DI DATABASE
-                if (currentFacilityBookings.includes(currentCellDate)) {
+                // Karena datanya sekarang berupa object { "2026-05-01": "Alasan" }, kita pakai hasOwnProperty
+                if (currentFacilityBookings.hasOwnProperty(currentCellDate)) {
+                    
+                    // Ambil alasan dari database
+                    const alasan = currentFacilityBookings[currentCellDate]; 
+
                     // PENUH / BOOKED (MERAH)
                     dayDiv.classList.add("bg-sipred/10", "text-white", "border-sipred/50");
                     statusHTML = `<span class="w-1.5 h-1.5 rounded-full bg-sipred absolute bottom-2 shadow-[0_0_5px_#DE2828]"></span>`;
-                    dayDiv.title = "Fasilitas Penuh / Diblokir";
                     
-                    // Alert seperti di script lama Anda
+                    // Ganti tooltip kecil saat di-hover
+                    dayDiv.title = "Tidak Tersedia: " + alasan;
+                    
+                    // POP-UP SWEETALERT BARU YANG KEREN
                     dayDiv.addEventListener('click', () => {
-                        alert("Maaf, fasilitas pada tanggal ini sudah penuh/diblokir oleh Admin.");
+                        Swal.fire({
+                            title: 'Fasilitas Tidak Tersedia',
+                            html: `
+                                <div class="text-sm text-gray-300 mt-2">
+                                    Mohon maaf, fasilitas pada tanggal ini tidak dapat dipinjam.
+                                </div>
+                                <div class="mt-4 bg-[#0f1115] border border-gray-700 p-4 rounded-xl text-left">
+                                    <div class="text-[10px] font-bold text-sipred tracking-widest uppercase mb-1">Keterangan / Alasan:</div>
+                                    <div class="text-white font-medium">"${alasan}"</div>
+                                </div>
+                            `,
+                            icon: 'error',
+                            background: '#16181e',
+                            color: '#fff',
+                            confirmButtonColor: '#DE2828',
+                            confirmButtonText: 'Tutup',
+                            customClass: {
+                                popup: 'rounded-3xl border border-gray-700',
+                                confirmButton: 'rounded-xl font-bold px-8 py-2.5'
+                            }
+                        });
                     });
+
                 } else {
                     // TERSEDIA (HIJAU)
                     dayDiv.classList.add("bg-[#00AE1C]/10", "text-white", "border-[#00AE1C]/50");

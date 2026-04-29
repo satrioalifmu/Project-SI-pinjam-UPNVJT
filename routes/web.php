@@ -49,7 +49,8 @@ Route::middleware(['auth'])->group(function () {
     
     // Blokir Jadwal
     Route::post('/admin/block', [AdminController::class, 'blockSchedule'])->name('admin.block');
-    Route::post('/admin/unblock', [AdminController::class, 'unblockSchedule'])->name('admin.unblock');
+    Route::post('/admin/unblock-bulk', [App\Http\Controllers\AdminController::class, 'bulkUnblockJadwal'])->name('admin.unblock.bulk');
+    Route::post('/admin/unblock-range', [App\Http\Controllers\AdminController::class, 'unblockRange'])->name('admin.unblock.range');
 
 
     // --- AREA DOSEN & TENDIK ---
