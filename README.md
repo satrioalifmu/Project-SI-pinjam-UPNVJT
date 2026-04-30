@@ -13,7 +13,7 @@ Sistem ini hadir dengan antarmuka _Dark Mode_ yang modern, elegan, dan _user-fri
 
 ## ✨ Fitur Unggulan
 
-Sistem ini membagi hak akses menjadi dua peran utama: **Administrator** dan **Mahasiswa**.
+Sistem ini memiliki manajemen Hak Akses (Multi-Role) yang komprehensif, dibagi menjadi 4 peran pengguna:
 
 ### 👨‍🎓 Panel Mahasiswa (Pengguna)
 
@@ -26,6 +26,17 @@ Sistem ini membagi hak akses menjadi dua peran utama: **Administrator** dan **Ma
 - **Kelola Data Fasilitas (CRUD):** Menambah, mengedit, dan menghapus data fasilitas kampus beserta foto dan kapasitasnya.
 - **Manajemen Blokir Jadwal Lanjutan:** Fitur _bulk-action_ untuk memblokir rentang tanggal tertentu (misal: untuk renovasi atau hari libur). Dilengkapi algoritma pemampat data tanggal yang cerdas untuk tampilan _pop-up_ yang rapi.
 - **Persetujuan (Approve/Reject):** Meninjau dan memvalidasi setiap pengajuan dari mahasiswa.
+
+### 👨‍🏫 2. Panel Dosen
+* Memiliki dasbor khusus untuk sivitas akademika pengajar.
+* Mengajukan peminjaman fasilitas untuk keperluan akademik, kuliah pengganti, atau seminar.
+
+### 👨‍🎓 3. Panel Mahasiswa
+* **Pengajuan Anti-Bentrok:** Mengajukan peminjaman (misal: untuk kegiatan BEM/HIMA) dengan sistem validasi otomatis yang mencegah tanggal bentrok.
+* **Riwayat Interaktif:** Memantau status pengajuan secara *real-time*.
+
+### 🤝 4. Panel Eksternal (Umum)
+* Pintu masuk bagi pihak luar kampus (masyarakat umum, instansi, atau perusahaan) yang ingin menyewa fasilitas kampus (misal: GSG untuk pernikahan atau acara umum).
 
 ---
 
